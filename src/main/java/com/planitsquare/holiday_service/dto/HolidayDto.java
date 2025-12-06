@@ -1,0 +1,16 @@
+package com.planitsquare.holiday_service.dto;
+
+import java.time.LocalDate;
+import java.util.List;
+
+public record HolidayDto(
+        LocalDate date,
+        String localName,
+        String name,
+        String countryCode,
+        boolean fixed,
+        boolean global,
+        List<String> counties,
+        Integer launchYear,
+        List<String> types
+) {}
