@@ -18,9 +18,7 @@ public class HolidayController {
 
     private final HolidayService holidayService;
 
-    @Operation(
-            summary = "공휴일 검색"
-    )
+    @Operation(summary = "공휴일 검색")
     @GetMapping("/search")
     public Page<HolidaySearchDto> searchHolidays(
             @Parameter(description = "연도", example = "2024") @RequestParam(required = false) Integer year,
@@ -35,10 +33,7 @@ public class HolidayController {
 
     @PutMapping("/refresh")
     @Operation(summary = "공휴일 재동기화")
-    public String refresh(
-            @RequestParam int year,
-            @RequestParam String countryCode
-    ) {
+    public String refresh(@RequestParam int year, @RequestParam String countryCode) {
         holidayService.refresh(year, countryCode);
         return "refresh ok";
     }

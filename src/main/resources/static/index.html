@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holiday Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: #333;
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0 0 5px 0;
+            font-size: 1.8em;
+        }
+
+        .section {
+            background: white;
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .input-wrapper label {
+            display: block;
+            margin-bottom: 3px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            font-size: 0.95em;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        button {
+            padding: 8px 20px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background: #fff;
+            font-size: 0.95em;
+        }
+
+        button:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+            border-color: #ff9800;
+        }
+
+        .btn-warning:hover {
+            background: #e68900;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+
+        tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+
+        .loading {
+            display: none;
+            padding: 15px;
+            color: #666;
+            text-align: center;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .message.success {
+            background: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+            display: block;
+        }
+
+        .message.error {
+            background: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+            display: block;
+        }
+
+        .page-info {
+            padding: 10px;
+            margin: 10px 0;
+            background: #e8e8e8;
+            text-align: center;
+            display: none;
+        }
+
+        .page-info.active {
+            display: block;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 6px 12px;
+            min-width: 35px;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-number {
+            padding: 6px 12px;
+            background: #e0e0e0;
+            border: 1px solid #ccc;
+        }
+
+        .page-size-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .page-size-selector label {
+            color: #666;
+        }
+
+        .page-size-selector select {
+            padding: 6px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Holiday Management System</h1>
+    <p>공휴일 검색, 동기화, 삭제 관리</p>
+</div>
+
+<div class="content">
+    <!-- 검색 섹션 -->
+    <div class="section">
+        <h2>공휴일 검색</h2>
+
+        <div class="page-size-selector">
+            <label>페이지 크기:</label>
+            <select id="pageSize" onchange="currentPage = 0; searchHolidays()">
+                <option value="10">10개</option>
+                <option value="20">20개</option>
+                <option value="50" selected>50개</option>
+                <option value="100">100개</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <div class="input-wrapper">
+                <label>연도</label>
+                <input id="searchYear" type="number" placeholder="2024">
+            </div>
+            <div class="input-wrapper">
+                <label>국가</label>
+                <input id="searchCountry" placeholder="KR">
+            </div>
+            <div class="input-wrapper">
+                <label>타입</label>
+                <input id="searchType" placeholder="Public">
+            </div>
+            <div class="input-wrapper">
+                <label>시작일</label>
+                <input id="searchFrom" type="date">
+            </div>
+            <div class="input-wrapper">
+                <label>종료일</label>
+                <input id="searchTo" type="date">
+            </div>
+            <button class="btn-primary" onclick="searchHolidays()">검색</button>
+        </div>
+
+        <div id="searchMessage" class="message"></div>
+        <div id="searchLoading" class="loading">🔄 검색 중...</div>
+
+        <div id="pageInfo" class="page-info"></div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>날짜</th>
+                    <th>공휴일명</th>
+                    <th>로컬명</th>
+                    <th>국가</th>
+                    <th>타입</th>
+                </tr>
+                </thead>
+                <tbody id="searchResults">
+                <tr>
+                    <td colspan="5" class="empty-state">검색 결과가 여기에 표시됩니다</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- 재동기화 섹션 -->
+    <div class="section">
+        <h2>공휴일 재동기화</h2>
+        <div class="form-group">
+            <div class="input-wrapper">
+                <label>연도</label>
+                <input id="refreshYear" type="number" placeholder="2024">
+            </div>
+            <div class="input-wrapper">
+                <label>국가</label>
+                <input id="refreshCountry" placeholder="KR">
+            </div>
+            <button class="btn-warning" onclick="refreshHolidays()">재동기화</button>
+        </div>
+        <div id="refreshMessage" class="message"></div>
+        <div id="refreshLoading" class="loading">🔄 재동기화 중...</div>
+    </div>
+
+    <!-- 삭제 섹션 -->
+    <div class="section">
+        <h2>공휴일 삭제</h2>
+        <div class="form-group">
+            <div class="input-wrapper">
+                <label>연도</label>
+                <input id="deleteYear" type="number" placeholder="2024">
+            </div>
+            <div class="input-wrapper">
+                <label>국가</label>
+                <input id="deleteCountry" placeholder="KR">
+            </div>
+            <button class="btn-danger" onclick="deleteHolidays()">삭제</button>
+        </div>
+        <div id="deleteMessage" class="message"></div>
+        <div id="deleteLoading" class="loading">🔄 삭제 중...</div>
+    </div>
+</div>
+</div>
+
+<script>
+    const API_BASE = '/api/v1';
+    let currentPage = 0;
+    let totalPages = 0;
+    let totalElements = 0;
+
+    function showMessage(elementId, message, isSuccess) {
+        const el = document.getElementById(elementId);
+        el.textContent = message;
+        el.className = 'message ' + (isSuccess ? 'success' : 'error');
+        setTimeout(() => {
+            el.className = 'message';
+        }, 5000);
+    }
+
+    function showLoading(elementId, show) {
+        const el = document.getElementById(elementId);
+        el.className = show ? 'loading active' : 'loading';
+    }
+
+    function updatePageInfo(data) {
+        const pageInfo = document.getElementById('pageInfo');
+        if (data.content && data.content.length > 0) {
+            totalPages = data.totalPages || 0;
+            totalElements = data.totalElements || 0;
+            const start = currentPage * (data.size || 0) + 1;
+            const end = Math.min((currentPage + 1) * (data.size || 0), totalElements);
+
+            pageInfo.innerHTML = `
+                전체 <strong>${totalElements}</strong>개 중
+                <strong>${start}</strong> - <strong>${end}</strong>번째 표시
+                (페이지 <strong>${currentPage + 1}</strong> / <strong>${totalPages}</strong>)
+            `;
+            pageInfo.className = 'page-info active';
+            updatePagination();
+        } else {
+            pageInfo.className = 'page-info';
+        }
+    }
+
+    function updatePagination() {
+        const pagination = document.getElementById('pagination');
+        if (totalPages <= 1) {
+            pagination.innerHTML = '';
+            return;
+        }
+
+        let html = `
+            <button class="btn-primary" onclick="goToPage(0)" ${currentPage === 0 ? 'disabled' : ''}>
+                ⏮️ 처음
+            </button>
+            <button class="btn-primary" onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>
+                ◀️ 이전
+            </button>
+        `;
+
+        // 페이지 번호 표시 (현재 페이지 기준 앞뒤 2개씩)
+        const startPage = Math.max(0, currentPage - 2);
+        const endPage = Math.min(totalPages - 1, currentPage + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            if (i === currentPage) {
+                html += `<div class="page-number">${i + 1}</div>`;
+            } else {
+                html += `<button class="btn-primary" onclick="goToPage(${i})">${i + 1}</button>`;
+            }
+        }
+
+        html += `
+            <button class="btn-primary" onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>
+                다음 ▶️
+            </button>
+            <button class="btn-primary" onclick="goToPage(${totalPages - 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>
+                마지막 ⏭️
+            </button>
+        `;
+
+        pagination.innerHTML = html;
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        searchHolidays();
+    }
+
+    async function searchHolidays() {
+        const year = document.getElementById('searchYear').value;
+        const country = document.getElementById('searchCountry').value;
+        const type = document.getElementById('searchType').value;
+        const from = document.getElementById('searchFrom').value;
+        const to = document.getElementById('searchTo').value;
+        const pageSize = document.getElementById('pageSize').value;
+
+        const params = new URLSearchParams();
+        if (year) params.append('year', year);
+        if (country) params.append('country', country);
+        if (type) params.append('type', type);
+        if (from) params.append('from', from);
+        if (to) params.append('to', to);
+        params.append('page', currentPage);
+        params.append('size', pageSize);
+
+        showLoading('searchLoading', true);
+
+        try {
+            const res = await fetch(`${API_BASE}/search?${params}`);
+            const data = await res.json();
+
+            const tbody = document.getElementById('searchResults');
+            tbody.innerHTML = '';
+
+            if (!data.content || data.content.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">❌ 검색 결과가 없습니다</td></tr>';
+                showMessage('searchMessage', '검색 결과가 없습니다', false);
+                document.getElementById('pageInfo').className = 'page-info';
+                document.getElementById('pagination').innerHTML = '';
+            } else {
+                data.content.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.date || ''}</td>
+                        <td>${row.name || ''}</td>
+                        <td>${row.localName || ''}</td>
+                        <td>${row.countryCode || ''}</td>
+                        <td>${row.types ? row.types.join(', ') : ''}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                showMessage('searchMessage', `✅ 총 ${data.totalElements || 0}개의 결과를 찾았습니다`, true);
+                updatePageInfo(data);
+            }
+        } catch (error) {
+            console.error('검색 오류:', error);
+            showMessage('searchMessage', '❌ 검색 중 오류가 발생했습니다', false);
+        } finally {
+            showLoading('searchLoading', false);
+        }
+    }
+
+    async function refreshHolidays() {
+        const year = document.getElementById('refreshYear').value;
+        const countryCode = document.getElementById('refreshCountry').value;
+
+        if (!year || !countryCode) {
+            showMessage('refreshMessage', '❌ 연도와 국가를 모두 입력해주세요', false);
+            return;
+        }
+
+        showLoading('refreshLoading', true);
+
+        try {
+            const res = await fetch(`${API_BASE}/refresh?year=${year}&countryCode=${countryCode}`, {
+                method: 'PUT'
+            });
+            const result = await res.text();
+
+            if (res.ok) {
+                showMessage('refreshMessage', `✅ ${year}년 ${countryCode} 공휴일이 재동기화되었습니다`, true);
+            } else {
+                showMessage('refreshMessage', '❌ 재동기화 실패: ' + result, false);
+            }
+        } catch (error) {
+            console.error('재동기화 오류:', error);
+            showMessage('refreshMessage', '❌ 재동기화 중 오류가 발생했습니다', false);
+        } finally {
+            showLoading('refreshLoading', false);
+        }
+    }
+
+    async function deleteHolidays() {
+        const year = document.getElementById('deleteYear').value;
+        const countryCode = document.getElementById('deleteCountry').value;
+
+        if (!year || !countryCode) {
+            showMessage('deleteMessage', '❌ 연도와 국가를 모두 입력해주세요', false);
+            return;
+        }
+
+        if (!confirm(`정말로 ${year}년 ${countryCode}의 공휴일을 삭제하시겠습니까?`)) {
+            return;
+        }
+
+        showLoading('deleteLoading', true);
+
+        try {
+            const res = await fetch(`${API_BASE}/delete?year=${year}&countryCode=${countryCode}`, {
+                method: 'DELETE'
+            });
+            const result = await res.text();
+
+            if (res.ok) {
+                showMessage('deleteMessage', `✅ ${year}년 ${countryCode} 공휴일이 삭제되었습니다`, true);
+            } else {
+                showMessage('deleteMessage', '❌ 삭제 실패: ' + result, false);
+            }
+        } catch (error) {
+            console.error('삭제 오류:', error);
+            showMessage('deleteMessage', '❌ 삭제 중 오류가 발생했습니다', false);
+        } finally {
+            showLoading('deleteLoading', false);
+        }
+    }
+</script>
+
+</body>
+</html>

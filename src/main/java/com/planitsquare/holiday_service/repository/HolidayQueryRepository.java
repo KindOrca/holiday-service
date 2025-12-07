@@ -70,4 +70,3 @@ public class HolidayQueryRepository {
         return type == null ? null : h.types.contains(type);
     }
 }
-
