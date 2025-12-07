@@ -19,12 +19,17 @@ public class CountryCache {
     @PostConstruct
     public void init() {
         for (CountryDto c : apiClient.fetchCountries()) {
-            countries.put(c.name(), c.countryCode());
+            countries.put(c.name().toLowerCase(), c.countryCode());
         }
     }
 
-    public String getCountryCode(String name) {
-        return countries.get(name);
+    public boolean existsByCode(String countryCode) {
+        return countries.containsKey(countryCode);
+    }
+
+    public String findCountryCodeByName(String countryName) {
+        if (countryName == null) return null;
+        return countries.getOrDefault(countryName.trim().toLowerCase(), null);
     }
 
     public List<String> getAllCountryCodes() {
