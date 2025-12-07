@@ -23,12 +23,7 @@ public class CountryCache {
         }
     }
 
-    public boolean existsByCode(String countryCode) {
-        return countries.containsKey(countryCode);
-    }
-
     public String findCountryCodeByName(String countryName) {
-        if (countryName == null) return null;
         return countries.getOrDefault(countryName.trim().toLowerCase(), null);
     }
 
