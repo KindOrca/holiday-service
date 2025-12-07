@@ -5,7 +5,7 @@ import com.planitsquare.holiday_service.entity.Holiday;
 import java.time.LocalDate;
 import java.util.List;
 
-public record HolidaySearchResponse(
+public record HolidaySearchDto(
         Long id,
         String name,
         String localName,
@@ -18,8 +18,8 @@ public record HolidaySearchResponse(
         List<String> counties
 ) {
 
-    public static HolidaySearchResponse from(Holiday holiday) {
-        return new HolidaySearchResponse(
+    public static HolidaySearchDto from(Holiday holiday) {
+        return new HolidaySearchDto(
                 holiday.getId(),
                 holiday.getName(),
                 holiday.getLocalName(),

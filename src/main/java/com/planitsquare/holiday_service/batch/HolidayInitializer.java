@@ -22,13 +22,11 @@ public class HolidayInitializer {
     public void init() {
         int currentYear = LocalDate.now().getYear();
         for (String countryCode : countryCache.getAllCountryCodes()) {
-            for (int year = currentYear; year <= currentYear; ++year) {
+            for (int year = currentYear - 4; year <= currentYear; ++year) {
 
                 HolidayDto[] holidays = apiClient.fetchHolidays(year, countryCode);
 
-                if (holidays != null) {
-                    holidayService.saveHolidays(holidays);
-                }
+                if (holidays != null) holidayService.saveHolidays(holidays);
             }
         }
     }
