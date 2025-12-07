@@ -45,25 +45,22 @@ public class HolidayService {
 
     public Page<HolidaySearchDto> search(Integer year, String country, LocalDate from, LocalDate to, String type, Pageable pageable) {
 
+        // year validation
         if (year != null && (year < 1900 || year > 2100)) {
-            throw new IllegalArgumentException("연도는 1900년에서 2100년 사이여야 합니다");
+            throw new IllegalArgumentException("연도는 1900년 ~ 2100년 사이여야 합니다");
         }
 
-        if (country != null) {
-            if (country.length() > 2) {
-                country = countryCache.findCountryCodeByName(country);
-                if (country == null) throw new IllegalArgumentException("해당 국가는 없습니다");
-            }
-        }
+        // 국가 변환 → 코드 통일
+        country = normalizeCountryCode(country);
 
         if (from != null && to != null && to.isBefore(from)) {
             throw new IllegalArgumentException("종료일은 시작일보다 이후여야 합니다");
         }
 
         if (type != null) {
-            List<String> types = Arrays.asList("Public", "Bank", "School", "Authorities", "Optional", "Observance");
-            if (!types.contains(type)) {
-                throw new IllegalArgumentException("타입은 Public, Bank, School, Authorities, Optional, Observance 중 하나여야 합니다");
+            List<String> validTypes = Arrays.asList("Public", "Bank", "School", "Authorities", "Optional", "Observance");
+            if (!validTypes.contains(type)) {
+                throw new IllegalArgumentException("타입은 다음 중 하나여야 합니다: " + validTypes);
             }
         }
 
@@ -72,18 +69,19 @@ public class HolidayService {
     }
 
     @Transactional
-    public void refresh(Integer year, String countryCode) {
+    public void refresh(Integer year, String country) {
 
-        delete(year, countryCode);
+        country = normalizeCountryCode(country);
 
-        HolidayDto[] response = apiClient.fetchHolidays(year, countryCode);
+        delete(year, country);
+
+        HolidayDto[] response = apiClient.fetchHolidays(year, country);
 
         List<Holiday> holidays = new ArrayList<>();
         for (HolidayDto holiday : response) {
             holidays.add(Holiday.builder()
                     .name(holiday.name())
                     .date(holiday.date())
-                    .name(holiday.name())
                     .localName(holiday.localName())
                     .countryCode(holiday.countryCode())
                     .launchYear(holiday.launchYear())
@@ -97,9 +95,24 @@ public class HolidayService {
     }
 
     @Transactional
-    public void delete(Integer year, String countryCode) {
+    public void delete(Integer year, String country) {
+
+        country = normalizeCountryCode(country);
+
         LocalDate from = LocalDate.of(year, 1, 1);
         LocalDate to = LocalDate.of(year, 12, 31);
-        holidayRepository.deleteByCountryCodeAndDateBetween(countryCode, from, to);
+        holidayRepository.deleteByCountryCodeAndDateBetween(country, from, to);
+    }
+
+    private String normalizeCountryCode(String input) {
+
+        if (input == null || input.isBlank()) return null;
+
+        if (input.length() == 2) return input.toUpperCase();
+
+        String resolved = countryCache.findCountryCodeByName(input);
+        if (resolved == null) throw new IllegalArgumentException("해당 국가를 찾을 수 없습니다");
+
+        return resolved.toUpperCase();
     }
 }
